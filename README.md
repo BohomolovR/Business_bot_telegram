@@ -68,16 +68,12 @@ This project uses the following libraries:
 - python-telegram-bot – for Telegram bot API integration
 - python-dotenv – for environment variable management
 
-## 📌 See the Bot in Action 🎥
-
-▶️ Demo video coming soon!
-
 ## 📌 Author
 
 Rostyslav Bohomolov / BohomolovR
 
 ## 📌 Repository
 
-[GitHub Repository Link](https://github.com/BohomolovR/secret_bot_telegram)
+[GitHub Repository Link](https://github.com/BohomolovR/Business_bot_telegram)
 
 🚀 Enjoy using the bot!

@@ -40,7 +40,14 @@ Create a `.env` file in the project directory and add your Telegram bot token:
 TELEGRAM_BOT_TOKEN=your_bot_token_here
 ```
 
-### 4️⃣ Run the Bot
+### 4️⃣ Telegram Premium Requirement
+
+⚠️ **Important**: This bot requires Telegram Premium to function properly. 
+- You must have an active Telegram Premium subscription
+- Connect the bot to your dialogues using the Telegram Premium connection feature
+- Without Premium, certain bot functionalities will not be available
+
+### 5️⃣ Run the Bot
 
 Start the bot with:
 
@@ -48,7 +55,7 @@ Start the bot with:
 python main.py
 ```
 
-### 5️⃣ Using the Bot
+### 6️⃣ Using the Bot
 
 - 🔹 Start a chat with your bot on Telegram.
 - 🔹 Use commands to add, edit, or delete secrets/tasks.

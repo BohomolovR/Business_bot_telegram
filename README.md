@@ -65,7 +65,7 @@ This project uses the following libraries:
 ## 📌 Technologies Used
 
 - Python – main programming language
-- python-telegram-bot – for Telegram bot API integration
+- telethon – for Telegram bot API integration
 - python-dotenv – for environment variable management
 
 ## 📌 Author

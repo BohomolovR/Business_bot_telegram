@@ -57,7 +57,7 @@ python main.py
 ## 📌 Required Libraries
 
 This project uses the following libraries:
-- python-telegram-bot
+- telethon
 - python-dotenv
 
 (See `requirements.txt` for the full list.)

@@ -1,11 +1,11 @@
 import sqlite3
 from sqlite3 import connect
 
-# Создание подключения к единой БД
+# Create a connection to the single database
 conn = sqlite3.connect("database.db")
 cursor = conn.cursor()
 
-# Создание таблицы пользователей
+# Create the users table
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,7 +14,7 @@ cursor.execute('''
     )
 ''')
 
-# Создание таблицы сообщений
+# Create the messages table
 cursor.execute('''
     CREATE TABLE IF NOT EXISTS messages (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,7 +32,7 @@ conn.commit()
 
 
 class DatabaseManager:
-    # Функция сохранения сообщения
+    # Function to save a message
     def save_message(self, connection_id, message_id, user_message_id, username, type_message, message, date):
         cursor.execute('''
                 INSERT INTO messages (connection_id, message_id, user_message_id, username, type_message, message, date)
@@ -40,16 +40,16 @@ class DatabaseManager:
             ''', (connection_id, message_id, user_message_id, username, type_message, message, date))
         conn.commit()
 
-    # Получить сообщение по его ID
+    # Get a message by its ID
     def get_message_by_id(self, msg_id):
         cursor.execute('''
-                SELECT connection_id, username,type_message, message
-                FROM messages 
+                SELECT connection_id, username, type_message, message
+                FROM messages
                 WHERE message_id = ?
             ''', (msg_id,))
         return cursor.fetchone()
 
-    # Функция сохранения владельца подключения
+    # Function to save the owner of a connection
     def save_owner_id(self, owner_id, connection_id):
         cursor.execute('''
                 INSERT OR IGNORE INTO users (owner_id, connection_id)
@@ -57,25 +57,25 @@ class DatabaseManager:
             ''', (owner_id, connection_id))
         conn.commit()
 
-    # Получить owner_id по connection_id
+    # Get owner_id by connection_id
     def get_owner_id(self, connection_id):
         cursor.execute('''
-                SELECT owner_id 
-                FROM users 
+                SELECT owner_id
+                FROM users
                 WHERE connection_id = ?
             ''', (connection_id,))
         row = cursor.fetchone()
         return row[0] if row else None
 
-    # Удалить сообщение по его ID
+    # Delete a message by its ID
     def delete_message_from_database(self, msg_id):
         cursor.execute('''
                 DELETE FROM messages
                 WHERE message_id = ?
-            ''', (message_id,))
+            ''', (msg_id,))
         conn.commit()
 
-    # Удалить owner_id если чесловек отключил бота
+    # Delete owner_id if the user disconnected the bot
     def delete_owner_id(self, owner_id):
         cursor.execute('''
                 DELETE FROM users
@@ -83,37 +83,37 @@ class DatabaseManager:
             ''', (owner_id,))
         conn.commit()
 
-    # Функция проверки есть ли такой owner_id в базе
+    # Function to check if such owner_id exists in the database
     def connection_id_exists(self, owner_id):
         cursor.execute('''
-                SELECT connection_id 
-                FROM users 
+                SELECT connection_id
+                FROM users
                 WHERE owner_id = ?
                 ''', (owner_id,)
                        )
         row = cursor.fetchone()
         return row is not None
 
-    # Перезапись всех сообщений на новый connection_id
+    # Overwrite all messages to a new connection_id
     def rewrite_connection_id(self, new_connection_id, old_connection_id):
         cursor.execute('''
-                UPDATE messages 
-                SET connection_id = ? 
+                UPDATE messages
+                SET connection_id = ?
                 WHERE connection_id = ?
                 ''', (new_connection_id, old_connection_id,))
 
         cursor.execute('''
-                    UPDATE users 
-                    SET connection_id = ? 
+                    UPDATE users
+                    SET connection_id = ?
                     WHERE connection_id = ?
                     ''', (new_connection_id, old_connection_id,))
 
         conn.commit()
 
-    # Функция запроса старого connection_id пользователя
+    # Function to get the old connection_id by owner_id
     def get_old_connection_id_by_owner_id(self, owner_id):
         cursor.execute('''
-                SELECT connection_id 
+                SELECT connection_id
                 FROM users
                 WHERE owner_id = ?
             ''', (owner_id,))

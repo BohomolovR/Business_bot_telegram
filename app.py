@@ -1,6 +1,5 @@
 from pprint import pprint
 
-from dotenv import load_dotenv
 import os
 import glob
 import json
@@ -22,16 +21,6 @@ from telethon.tl.types import (
 from database import DatabaseManager
 from encryption import MessageEncryptor
 
-load_dotenv()
-
-API_ID = os.getenv("API_ID")
-API_HASH = os.getenv("API_HASH")
-API_TOKEN = os.getenv("API_TOKEN")
-
-bot = TelegramClient("bot_session", API_ID, API_HASH)
-bot.start(bot_token=API_TOKEN)
-
-
 class BusinessBot:
     def __init__(self, api_id, api_hash, api_token):
         self.bot = TelegramClient("bot_session", api_id, api_hash)
@@ -50,7 +39,7 @@ class BusinessBot:
                 print(connection.disabled)
                 print(self.db.connection_id_exists(owner_id))
                 if connection.disabled:
-                    print("Bot disconnect")
+                    print("Bot disconnected")
                 else:
                     if self.db.connection_id_exists(owner_id):
                         old_connection_id = self.db.get_old_connection_id_by_owner_id(owner_id)
@@ -85,7 +74,7 @@ class BusinessBot:
                                                                   self.db.get_owner_id(message_connection_id))
                     message_id = message.id
                     date = datetime.datetime.now().isoformat()
-                    print(f"📩 Збережено від {username}: {message_text}")
+                    print(f"📩 Saved from {username}: {message_text}")
 
                     if isinstance(message.media, MessageMediaPhoto):
                         await self.bot.download_media(message.media, file=f"images/{message.id}.jpg")
@@ -113,34 +102,34 @@ class BusinessBot:
                             DocumentAttributeSticker, DocumentAttributeImageSize)) and mime == "image/webp":
                                 file_path = f"stickers/{message.id}.webp"
                                 await self.bot.download_media(message.media, file=file_path)
-                                print("🟠 Статический стикер")
+                                print("🟠 Static sticker")
                                 self.db.save_message(message_connection_id, message_id, user_id, username, "sticker",
                                                      message_text, date)
                                 break
 
                             elif isinstance(attr, DocumentAttributeAudio) and attr.voice:
-                                print("🎧 Голосовое сообщение")
+                                print("🎧 Voice message")
                                 await self.bot.download_media(message.media, file=f"voices/{message.id}.ogg")
                                 self.db.save_message(message_connection_id, message_id, user_id, username, "voice",
                                                      message_text, date)
                                 break
 
                             elif isinstance(attr, DocumentAttributeVideo) and attr.round_message:
-                                print("🔵 Видеокружок")
+                                print("🔵 Video round")
                                 await self.bot.download_media(message.media, file=f"rounds/{message.id}.mp4")
                                 self.db.save_message(message_connection_id, message_id, user_id, username, "round",
                                                      message_text, date)
                                 break
 
                             elif isinstance(attr, DocumentAttributeVideo):
-                                print("🎥 Видео")
+                                print("🎥 Video")
                                 await self.bot.download_media(message.media, file=f"videos/{message.id}.mp4")
                                 self.db.save_message(message_connection_id, message_id, user_id, username, "video",
                                                      message_text, date)
                                 break
 
                             else:
-                                print("📎 Документ/файл")
+                                print("📎 Document/file")
                                 await self.bot.download_media(message.media, file=f"files/{message.id}")
                                 self.db.save_message(message_connection_id, message_id, user_id, username, "file",
                                                      message_text, date)
@@ -159,13 +148,13 @@ class BusinessBot:
                         print(type(type_message))
                         owner_id = self.db.get_owner_id(connection_id)
                         type_map = {
-                            "photo": ("photos", "удалил фото"),
-                            "voice": ("voices", "удалил голосовое"),
-                            "round": ("rounds", "удалил кружок"),
-                            "video": ("videos", "удалил видео"),
-                            "file": ("files", "удалил файл"),
-                            "gif": ("gifs", "удалил гифку"),
-                            "sticker": ("stickers", "удалил стикер")
+                            "photo": ("photos", "deleted a photo"),
+                            "voice": ("voices", "deleted a voice message"),
+                            "round": ("rounds", "deleted a video round"),
+                            "video": ("videos", "deleted a video"),
+                            "file": ("files", "deleted a file"),
+                            "gif": ("gifs", "deleted a gif"),
+                            "sticker": ("stickers", "deleted a sticker")
                         }
 
                         if type_message in type_map:
@@ -179,7 +168,7 @@ class BusinessBot:
                                     file_reference=bytes.fromhex(data["file_ref"])
                                 )
 
-                                await self.bot.send_message(owner_id, f"{username} удалил гифку:")
+                                await self.bot.send_message(owner_id, f"{username} deleted a gif:")
                                 await self.bot.send_file(owner_id, input_doc, force_document=False)
 
                             files = glob.glob(f"{folder}/{msg_id}.*")
@@ -189,39 +178,30 @@ class BusinessBot:
                                 os.remove(files[0])
                         else:
                             messages_text = self.encryptor.decrypt_message(text, owner_id)
-                            await self.bot.send_message(owner_id, f"{username} удалил сообщение: {messages_text}")
+                            await self.bot.send_message(owner_id, f"{username} deleted a message: {messages_text}")
                     else:
-                        print(f"⚠️ Сообщение с ID {msg_id} не найдено в базе\n")
+                        print(f"⚠️ Message with ID {msg_id} not found in the database\n")
 
             elif isinstance(event, UpdateBotEditBusinessMessage):
                 msg = event.message
                 row = self.db.get_message_by_id(msg.id)
                 if msg.from_id:
-                    print("⚠️ Отредактированно ботом!")
+                    print("⚠️ Edited by bot!")
                 elif row:
                     connection_id, username, text = row
                     owner_id = self.db.get_owner_id(connection_id)
                     messages_text = self.encryptor.decrypt_message(text, owner_id)
                     await self.bot.send_message(owner_id,
-                                                f"{username} отредактировал сообщение {messages_text} на {msg.message} ")
+                                                f"{username} edited the message {messages_text} to {msg.message} ")
                 else:
-                    print(f"⚠️ Сообщение с ID {msg.id} не найдено в базе\n")
+                    print(f"⚠️ Message with ID {msg.id} not found in the database\n")
 
         @self.bot.on(events.NewMessage(pattern='/start'))
         async def start(event):
             owner_id = event.sender_id
-            print(f"🆔 Новый пользователь: {owner_id}")
-            await event.respond("Привет, я бот для отслеживания удалённых и изменённых сообщений.")
+            print(f"🆔 New user: {owner_id}")
+            await event.respond("Hello, I am a bot for tracking deleted and edited messages.")
 
     def run(self):
         print("🤖 Bot is waiting for business messages...")
         self.bot.run_until_disconnected()
-
-
-def main():
-    print("🤖 Бот очікує бізнес-повідомлення...")
-    bot.run_until_disconnected()
-
-
-if __name__ == '__main__':
-    main()

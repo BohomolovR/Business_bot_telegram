@@ -8,11 +8,17 @@ import base64
 
 class MessageEncryptor:
     def generate_key(self, owner_id):
+        """
+        Generate a 16-byte key based on the owner's ID.
+        """
         user_id_str = str(owner_id)
         short_key = user_id_str[:2] + user_id_str[-2:]
         return hashlib.sha256(short_key.encode()).digest()[:16]
 
     def encrypt_message(self, message, owner_id):
+        """
+        Encrypt a message using AES CBC mode.
+        """
         key = self.generate_key(owner_id)
         iv = get_random_bytes(16)
         cipher = AES.new(key, AES.MODE_CBC, iv)
@@ -20,6 +26,9 @@ class MessageEncryptor:
         return base64.b64encode(iv + encrypted).decode()
 
     def decrypt_message(self, message, owner_id):
+        """
+        Decrypt a message using AES CBC mode.
+        """
         key = self.generate_key(owner_id)
         data = base64.b64decode(message)
         iv = data[:16]

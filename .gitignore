@@ -8,3 +8,10 @@ __pycache__/
 .idea/
 .DS_Store
 .pytest_cache/
+files/
+gifs/
+images/
+rounds/
+stickers/
+videos/
+voices/

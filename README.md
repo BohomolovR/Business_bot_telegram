@@ -58,7 +58,6 @@ python main.py
 ### 6️⃣ Using the Bot
 
 - 🔹 Start a chat with your bot on Telegram.
-- 🔹 Use commands to add, edit, or delete secrets/tasks.
 - 🔹 Follow the bot's instructions in the chat.
 
 ## 📌 Required Libraries

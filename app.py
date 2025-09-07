@@ -60,82 +60,86 @@ class BusinessBot:
                 message_connection_id = event.connection_id
                 reply = event.reply_to_message
 
-                if reply and reply.media and hasattr(reply.media, 'ttl_seconds') and reply.media.ttl_seconds:
-                    owner_id = self.db.get_owner_id(message_connection_id)
-                    photo_path = await self.bot.download_media(reply.media, file=f"images/{owner_id}.jpg")
-                    await self.bot.send_file(owner_id, photo_path)
-                    os.remove(photo_path)
+                if not message.out:
+                    if reply and reply.media and hasattr(reply.media, 'ttl_seconds') and reply.media.ttl_seconds:
+                        owner_id = self.db.get_owner_id(message_connection_id)
+                        photo_path = await self.bot.download_media(reply.media, file=f"images/{owner_id}.jpg")
+                        await self.bot.send_file(owner_id, photo_path)
+                        os.remove(photo_path)
 
-                if isinstance(message.peer_id, PeerUser):
-                    user_id = message.peer_id.user_id
-                    user_info = await self.bot.get_entity(user_id)
-                    username = f"@{user_info.username}" if user_info.username else user_info.first_name
-                    message_text = self.encryptor.encrypt_message(message.message,
-                                                                  self.db.get_owner_id(message_connection_id))
-                    message_id = message.id
-                    date = datetime.datetime.now().isoformat()
-                    print(f"📩 Saved from {username}: {message_text}")
+                    if isinstance(message.peer_id, PeerUser):
+                        user_id = message.peer_id.user_id
+                        user_info = await self.bot.get_entity(user_id)
+                        username = f"@{user_info.username}" if user_info.username else user_info.first_name
+                        message_text = self.encryptor.encrypt_message(message.message,
+                                                                      self.db.get_owner_id(message_connection_id))
+                        message_id = message.id
+                        date = datetime.datetime.now().isoformat()
+                        print(f"📩 Saved from {username}: {message_text}")
 
-                    if isinstance(message.media, MessageMediaPhoto):
-                        await self.bot.download_media(message.media, file=f"images/{message.id}.jpg")
-                        self.db.save_message(message_connection_id, message_id, user_id, username, "photo",
-                                             message_text, date)
+                        if isinstance(message.media, MessageMediaPhoto):
+                            await self.bot.download_media(message.media, file=f"images/{message.id}.jpg")
+                            self.db.save_message(message_connection_id, message_id, user_id, username, "photo",
+                                                 message_text, date)
 
-                    elif isinstance(message.media, MessageMediaDocument):
-                        doc = message.media.document
-                        mime = (doc.mime_type or "").lower()
-                        for attr in doc.attributes:
-                            if isinstance(attr,
-                                          (DocumentAttributeSticker, DocumentAttributeVideo)) and mime == "video/webm":
-                                doc = message.media.document
-                                info = {
-                                    "doc_id": doc.id,
-                                    "access_hash": doc.access_hash,
-                                    "file_ref": doc.file_reference.hex(),
-                                    "mime": doc.mime_type
-                                }
-                                self.db.save_message(message_connection_id, message_id, user_id, username, "gif",
-                                                     json.dumps(info), date)
-                                break
+                        elif isinstance(message.media, MessageMediaDocument):
+                            doc = message.media.document
+                            mime = (doc.mime_type or "").lower()
+                            for attr in doc.attributes:
+                                if isinstance(attr,
+                                              (DocumentAttributeSticker,
+                                               DocumentAttributeVideo)) and mime == "video/webm":
+                                    doc = message.media.document
+                                    info = {
+                                        "doc_id": doc.id,
+                                        "access_hash": doc.access_hash,
+                                        "file_ref": doc.file_reference.hex(),
+                                        "mime": doc.mime_type
+                                    }
+                                    self.db.save_message(message_connection_id, message_id, user_id, username, "gif",
+                                                         json.dumps(info), date)
+                                    break
 
-                            elif isinstance(attr, (
-                            DocumentAttributeSticker, DocumentAttributeImageSize)) and mime == "image/webp":
-                                file_path = f"stickers/{message.id}.webp"
-                                await self.bot.download_media(message.media, file=file_path)
-                                print("🟠 Static sticker")
-                                self.db.save_message(message_connection_id, message_id, user_id, username, "sticker",
-                                                     message_text, date)
-                                break
+                                elif isinstance(attr, (
+                                        DocumentAttributeSticker, DocumentAttributeImageSize)) and mime == "image/webp":
+                                    file_path = f"stickers/{message.id}.webp"
+                                    await self.bot.download_media(message.media, file=file_path)
+                                    print("🟠 Static sticker")
+                                    self.db.save_message(message_connection_id, message_id, user_id, username,
+                                                         "sticker",
+                                                         message_text, date)
+                                    break
 
-                            elif isinstance(attr, DocumentAttributeAudio) and attr.voice:
-                                print("🎧 Voice message")
-                                await self.bot.download_media(message.media, file=f"voices/{message.id}.ogg")
-                                self.db.save_message(message_connection_id, message_id, user_id, username, "voice",
-                                                     message_text, date)
-                                break
+                                elif isinstance(attr, DocumentAttributeAudio) and attr.voice:
+                                    print("🎧 Voice message")
+                                    await self.bot.download_media(message.media, file=f"voices/{message.id}.ogg")
+                                    self.db.save_message(message_connection_id, message_id, user_id, username, "voice",
+                                                         message_text, date)
+                                    break
 
-                            elif isinstance(attr, DocumentAttributeVideo) and attr.round_message:
-                                print("🔵 Video round")
-                                await self.bot.download_media(message.media, file=f"rounds/{message.id}.mp4")
-                                self.db.save_message(message_connection_id, message_id, user_id, username, "round",
-                                                     message_text, date)
-                                break
+                                elif isinstance(attr, DocumentAttributeVideo) and attr.round_message:
+                                    print("🔵 Video round")
+                                    await self.bot.download_media(message.media, file=f"rounds/{message.id}.mp4")
+                                    self.db.save_message(message_connection_id, message_id, user_id, username, "round",
+                                                         message_text, date)
+                                    break
 
-                            elif isinstance(attr, DocumentAttributeVideo):
-                                print("🎥 Video")
-                                await self.bot.download_media(message.media, file=f"videos/{message.id}.mp4")
-                                self.db.save_message(message_connection_id, message_id, user_id, username, "video",
-                                                     message_text, date)
-                                break
+                                elif isinstance(attr, DocumentAttributeVideo):
+                                    print("🎥 Video")
+                                    await self.bot.download_media(message.media, file=f"videos/{message.id}.mp4")
+                                    self.db.save_message(message_connection_id, message_id, user_id, username, "video",
+                                                         message_text, date)
+                                    break
 
-                            else:
-                                print("📎 Document/file")
-                                await self.bot.download_media(message.media, file=f"files/{message.id}")
-                                self.db.save_message(message_connection_id, message_id, user_id, username, "file",
-                                                     message_text, date)
-                    else:
-                        self.db.save_message(message_connection_id, message_id, user_id, username, "text", message_text,
-                                             date)
+                                else:
+                                    print("📎 Document/file")
+                                    await self.bot.download_media(message.media, file=f"files/{message.id}")
+                                    self.db.save_message(message_connection_id, message_id, user_id, username, "file",
+                                                         message_text, date)
+                        else:
+                            self.db.save_message(message_connection_id, message_id, user_id, username, "text",
+                                                 message_text,
+                                                 date)
 
             elif isinstance(event, UpdateBotDeleteBusinessMessage):
                 msg_ids = event.messages

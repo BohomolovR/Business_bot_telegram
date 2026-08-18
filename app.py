@@ -60,10 +60,11 @@ class BusinessBot:
                 message_connection_id = event.connection_id
                 reply = event.reply_to_message
 
-                if not message.out:
+                if message.out:
                     if reply and reply.media and hasattr(reply.media, 'ttl_seconds') and reply.media.ttl_seconds:
                         owner_id = self.db.get_owner_id(message_connection_id)
                         photo_path = await self.bot.download_media(reply.media, file=f"images/{owner_id}.jpg")
+                        print("Fdssdfs")
                         await self.bot.send_file(owner_id, photo_path)
                         os.remove(photo_path)
 
